@@ -3,7 +3,6 @@ import { JobRepository } from './repository/job.repository';
 import { JobQueryDto } from './dto/job-query.dto';
 import { Job, JobFilters, DirectJob, ScrapedJob, PaginatedJobs } from './types/jobs.types';
 import { BookmarkJobDto } from './dto/bookmark-job.dto';
-import { BookmarkedJob, BookmarkWithDetails } from './types/bookmark.types';
 
 @Injectable()
 export class JobService {
@@ -11,7 +10,7 @@ export class JobService {
 
   async findAll(query: JobQueryDto): Promise<PaginatedJobs> {
     const { source = 'all', page = 1, limit = 20 } = query;
-    const filters: JobFilters = { ...query };
+    const filters: JobFilters = { ...query, page, limit };
 
     if (source === 'direct') {
       return this.jobRepository.findPublishedDirectJobs(filters);
@@ -20,28 +19,38 @@ export class JobService {
       return this.jobRepository.findScrapedJobs(filters);
     }
 
-    // For 'all', split limit evenly between sources
-    const perSource = Math.ceil(limit / 2);
+    const fetchSize = page * limit;
+    const start = (page - 1) * limit;
+    const end = start + limit;
 
     const [directJobs, scrapedJobs] = await Promise.all([
-      this.jobRepository.findPublishedDirectJobs({ ...filters, page: 1, limit: perSource }),
-      this.jobRepository.findScrapedJobs({ ...filters, page: 1, limit: perSource }),
+      this.jobRepository.findPublishedDirectJobs({
+        ...filters,
+        page: 1,
+        limit: fetchSize,
+      }),
+      this.jobRepository.findScrapedJobs({
+        ...filters,
+        page: 1,
+        limit: fetchSize,
+      }),
     ]);
 
+    const total = directJobs.total + scrapedJobs.total;
     const mergedJobs: Job[] = [...directJobs.jobs, ...scrapedJobs.jobs]
       .sort((a, b) => {
-        const dateA = a.postedAt?.getTime() || 0;
-        const dateB = b.postedAt?.getTime() || 0;
+        const dateA = a.postedAt?.getTime() ?? 0;
+        const dateB = b.postedAt?.getTime() ?? 0;
         return dateB - dateA;
       })
-      .slice(0, limit);
+      .slice(start, end);
 
     return {
       jobs: mergedJobs,
-      total: directJobs.total + scrapedJobs.total,
+      total,
       page,
       limit,
-      totalPages: Math.ceil((directJobs.total + scrapedJobs.total) / limit),
+      totalPages: Math.ceil(total / limit),
     };
   }
 
@@ -81,22 +90,36 @@ export class JobService {
   async getMyBookmarks(jobSeekerId: string) {
     const bookmarks = await this.jobRepository.findBookmarksByJobSeeker(jobSeekerId);
 
-    const bookmarkedJobs = await Promise.all(
-      bookmarks.map(async (bookmark: BookmarkWithDetails) => {
-        const job =
-          bookmark.jobSource === 'DIRECT'
-            ? await this.jobRepository.findDirectJobById(bookmark.jobId)
-            : await this.jobRepository.findScrapedJobById(bookmark.jobId);
+    const scrappedJobsIds = bookmarks
+      .filter((bookmark) => bookmark.jobSource === 'SCRAPED')
+      .map((scrappedBookmark) => scrappedBookmark.jobId);
 
-        if (!job) return null;
+    const directJobsIds = bookmarks
+      .filter((bookmark) => bookmark.jobSource === 'DIRECT')
+      .map((directBookmark) => directBookmark.jobId);
 
-        return {
+    const [directJobs, scrappedJobs] = await Promise.all([
+      this.jobRepository.findDirectJobByIds(directJobsIds),
+      this.jobRepository.findScrapedJobByIds(scrappedJobsIds),
+    ]);
+
+    const directJobMap = new Map<string, DirectJob>(directJobs.map((job) => [job.id, job]));
+    const scrapedJobMap = new Map<string, ScrapedJob>(scrappedJobs.map((job) => [job.id, job]));
+
+    return bookmarks.flatMap((bookmark) => {
+      const job =
+        bookmark.jobSource === 'DIRECT'
+          ? directJobMap.get(bookmark.jobId)
+          : scrapedJobMap.get(bookmark.jobId);
+
+      if (!job) return [];
+      return [
+        {
           bookmarkId: bookmark.id,
           bookmarkedAt: bookmark.createdAt,
           job,
-        };
-      }),
-    );
-    return bookmarkedJobs.filter(Boolean) as BookmarkedJob[];
+        },
+      ];
+    });
   }
 }

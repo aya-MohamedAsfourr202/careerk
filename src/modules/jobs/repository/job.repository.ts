@@ -9,6 +9,8 @@ export abstract class JobRepository {
   abstract findScrapedJobs(filters: JobFilters): Promise<PaginatedJobs>;
   abstract findDirectJobById(jobId: string): Promise<DirectJob | null>;
   abstract findScrapedJobById(jobId: string): Promise<ScrapedJob | null>;
+  abstract findDirectJobByIds(jobIds: string[]): Promise<DirectJob[]>;
+  abstract findScrapedJobByIds(jobIds: string[]): Promise<ScrapedJob[]>;
 
   abstract createBookmark(jobSeekerId: string, data: CreateBookmarkData): Promise<{ id: string }>;
   abstract deleteBookmark(jobSeekerId: string, bookmarkId: string): Promise<void>;
