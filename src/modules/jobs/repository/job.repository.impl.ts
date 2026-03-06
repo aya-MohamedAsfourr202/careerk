@@ -16,6 +16,38 @@ export class JobRepositoryImpl implements JobRepository {
 
   constructor(private readonly databaseService: DatabaseService) {}
 
+  async findDirectJobByIds(jobIds: string[]): Promise<DirectJob[]> {
+    if (jobIds.length === 0) return [];
+
+    const jobs = await this.databaseService.directJob.findMany({
+      where: {
+        id: { in: jobIds },
+        status: 'PUBLISHED',
+      },
+      include: {
+        company: this.COMPANY_SELECT,
+        skills: this.SKILL_SELECT,
+      },
+    });
+
+    return jobs.map(this.transformDirectJob);
+  }
+
+  async findScrapedJobByIds(jobIds: string[]): Promise<ScrapedJob[]> {
+    if (jobIds.length === 0) return [];
+
+    const jobs = await this.databaseService.scrapedJob.findMany({
+      where: {
+        id: { in: jobIds },
+      },
+      include: {
+        skills: this.SKILL_SELECT,
+      },
+    });
+
+    return jobs.map(this.transformScrapedJob);
+  }
+
   async createBookmark(jobSeekerId: string, data: CreateBookmarkData): Promise<{ id: string }> {
     return this.databaseService.jobBookmark.upsert({
       where: {
