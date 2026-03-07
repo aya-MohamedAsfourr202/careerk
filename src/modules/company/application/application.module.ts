@@ -9,7 +9,7 @@ import { NotificationPreferenceModule } from 'src/modules/job-seeker/notificatio
 import { EmailModule } from 'src/infrastructure/email/email.module';
 import { BullModule } from '@nestjs/bullmq';
 import { APPLICATION_STATUS_EMAIL_QUEUE } from './jobs/queue.contants';
-import { ApplicationStatusEmailProcessor } from './processor/email.processor';
+import { ApplicationStatusEmailProcessor } from './processor/application-status-email.processor';
 
 @Module({
   imports: [
