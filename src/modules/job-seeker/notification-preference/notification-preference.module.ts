@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { NotificationPreferenceService } from './notification-preference.service';
-import { NotificationPreferenceRepository } from './repository/notification-preference.respository';
-import { NotificationPreferenceRepositoryImpl } from './repository/notification-preference.respository.impl';
+import { NotificationPreferenceRepository } from './repository/notification-preference.repository';
+import { NotificationPreferenceRepositoryImpl } from './repository/notification-preference.repository.impl';
 import { NotificationPreferenceController } from './notification-preference.controller';
 import { DatabaseModule } from 'src/infrastructure/database/database.module';
 

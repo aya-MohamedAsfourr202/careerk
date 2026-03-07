@@ -81,7 +81,7 @@ export class CompanyApplicationRepositoryImpl implements CompanyApplicationRepos
     applicationId: string,
     companyId: string,
   ): Promise<ApplicationForStatusUpdate | null> {
-    return this.databaseService.application.findUnique({
+    return this.databaseService.application.findFirst({
       where: {
         id: applicationId,
         directJob: { companyId },

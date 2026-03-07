@@ -153,6 +153,8 @@ export class PasswordService {
       throw new InternalServerErrorException('Failed to update password');
     }
 
+    await this.refreshTokenStorageService.invalidate(userId);
+
     return updatedUser;
   }
 }

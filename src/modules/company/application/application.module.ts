@@ -8,7 +8,7 @@ import { CvModule } from 'src/modules/cv/cv.module';
 import { NotificationPreferenceModule } from 'src/modules/job-seeker/notification-preference/notification-preference.module';
 import { EmailModule } from 'src/infrastructure/email/email.module';
 import { BullModule } from '@nestjs/bullmq';
-import { APPLICATION_STATUS_EMAIL_QUEUE } from './jobs/queue.contants';
+import { APPLICATION_STATUS_EMAIL_QUEUE } from './jobs/queue.constants';
 import { ApplicationStatusEmailProcessor } from './processor/application-status-email.processor';
 
 @Module({

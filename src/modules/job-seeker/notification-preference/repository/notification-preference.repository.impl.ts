@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { NotificationPreferenceRepository } from './notification-preference.respository';
+import { NotificationPreferenceRepository } from './notification-preference.repository';
 import {
   NotificationPreference,
   notificationPreferenceSelect,

@@ -8,7 +8,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import {
   APPLICATION_STATUS_EMAIL_QUEUE,
   SEND_APPLICATION_STATUS_EMAIL,
-} from './jobs/queue.contants';
+} from './jobs/queue.constants';
 import { Queue } from 'bullmq';
 import { UpdateApplicationStatus } from './jobs/send-update-application-status-email.job';
 

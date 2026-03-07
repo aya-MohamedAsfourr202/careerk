@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { NotificationPreferenceRepository } from './repository/notification-preference.respository';
+import { NotificationPreferenceRepository } from './repository/notification-preference.repository';
 import { UpdateNotificationPreferenceDto } from './dto/update-notification-preference.dto';
 
 @Injectable()
