@@ -1,4 +1,31 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: careerk-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: ${PORT:-3000}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-careerk}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-careerk_db}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      QUEUE_HOST: redis
+      QUEUE_PORT: 6379
+      NLP_API_URL: ${NLP_API_URL:-http://host.docker.internal:8000}
+    ports:
+      - '3000:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+
   postgres:
     image: postgres:18-alpine
     container_name: careerk-postgres
