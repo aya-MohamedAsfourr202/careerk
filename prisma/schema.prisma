@@ -31,7 +31,7 @@ model JobSeeker {
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
   profile JobSeekerProfile?
-  notificationPreference JobSeekerNotificationPreference?
+  jobSeekerNotificationPreference JobSeekerNotificationPreference?
 
   educations Education[]
   workExperiences WorkExperience[]
