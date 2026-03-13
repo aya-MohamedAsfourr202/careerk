@@ -1,8 +1,9 @@
+// matching.repository.impl.ts
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from 'src/infrastructure/database/database.service';
-import {
+import type { MatchingRepository } from './matching.repository';
+import type {
   DirectJobNotificationTarget,
-  MatchingRepository,
   ScrapedJobNotificationTarget,
 } from './matching.repository';
 import { directJobNotificationSelect, scrapedJobNotificationSelect } from '../types/matching.types';
@@ -10,6 +11,8 @@ import { directJobNotificationSelect, scrapedJobNotificationSelect } from '../ty
 @Injectable()
 export class MatchingRepositoryImpl implements MatchingRepository {
   constructor(private readonly databaseService: DatabaseService) {}
+
+  // ---------------- Notification Methods ----------------
 
   async findDirectJobNotificationTarget(
     jobId: string,
@@ -19,9 +22,7 @@ export class MatchingRepositoryImpl implements MatchingRepository {
       ...directJobNotificationSelect,
     });
 
-    if (!job?.company || !job.company.isActive) {
-      return null;
-    }
+    if (!job?.company || !job.company.isActive) return null;
 
     return {
       companyEmail: job.company.email,
@@ -44,16 +45,10 @@ export class MatchingRepositoryImpl implements MatchingRepository {
           isActive: true,
           isVerified: true,
           OR: [
+            { jobSeekerNotificationPreference: { is: null } },
             {
               jobSeekerNotificationPreference: {
-                is: null,
-              },
-            },
-            {
-              jobSeekerNotificationPreference: {
-                is: {
-                  jobMatchNotificationsEnabled: true,
-                },
+                is: { jobMatchNotificationsEnabled: true },
               },
             },
           ],
@@ -86,7 +81,6 @@ export class MatchingRepositoryImpl implements MatchingRepository {
       }
 
       existing.totalMatches += 1;
-
       if (existing.topMatches.length < 3) {
         existing.topMatches.push({
           title: match.scrapedJob.title,
@@ -98,5 +92,75 @@ export class MatchingRepositoryImpl implements MatchingRepository {
     }
 
     return Array.from(groupedTargets.values());
+  }
+
+  // ---------------- Matching Methods ----------------
+
+  async findDirectJobMatchesForJobSeeker(jobSeekerId: string): Promise<any[]> {
+    return await this.databaseService.directJobMatch.findMany({
+      where: { jobSeekerId },
+      include: {
+        directJob: {
+          select: {
+            id: true,
+            title: true,
+            location: true,
+            company: {
+              select: { name: true },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async findScrapedJobMatchesForJobSeeker(jobSeekerId: string): Promise<any[]> {
+    return await this.databaseService.scrapedJobMatch.findMany({
+      where: { jobSeekerId },
+      include: {
+        scrapedJob: {
+          select: {
+            id: true,
+            title: true,
+            companyName: true,
+            location: true,
+          },
+        },
+      },
+    });
+  }
+
+  async findDirectJobMatchesForCompany(companyId: string, jobId: string): Promise<any[]> {
+    return await this.databaseService.directJobMatch.findMany({
+      where: {
+        directJob: {
+          id: jobId,
+          companyId,
+        },
+      },
+      include: {
+        jobSeeker: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            profile: {
+              select: {
+                title: true,
+                availabilityStatus: true,
+                location: true,
+              },
+            },
+          },
+        },
+        directJob: {
+          select: {
+            id: true,
+            title: true,
+            company: { select: { name: true } },
+          },
+        },
+      },
+    });
   }
 }

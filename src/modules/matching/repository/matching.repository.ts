@@ -19,6 +19,7 @@ export type ScrapedJobNotificationTarget = {
 };
 
 export abstract class MatchingRepository {
+  // Notification targets
   abstract findDirectJobNotificationTarget(
     jobId: string,
   ): Promise<DirectJobNotificationTarget | null>;
@@ -27,4 +28,12 @@ export abstract class MatchingRepository {
     startedAt: Date,
     finishedAt: Date,
   ): Promise<ScrapedJobNotificationTarget[]>;
+
+  // Job matches for job seekers
+  abstract findDirectJobMatchesForJobSeeker(jobSeekerId: string): Promise<any[]>;
+
+  abstract findScrapedJobMatchesForJobSeeker(jobSeekerId: string): Promise<any[]>;
+
+  // Job matches for companies
+  abstract findDirectJobMatchesForCompany(companyId: string, jobId: string): Promise<any[]>;
 }
