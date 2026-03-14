@@ -13,7 +13,6 @@ import type {
 import {
   directJobNotificationSelect,
   scrapedJobNotificationSelect,
-  // ✅ Import the select objects for matching
   rawDirectJobMatchForJobSeekerSelect,
   rawScrapedJobMatchSelect,
   rawDirectJobMatchForCompanySelect,
